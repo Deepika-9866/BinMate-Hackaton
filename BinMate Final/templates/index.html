@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | BinMate</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <style>
+        :root {
+            --primary-teal: #00796b;
+            --secondary-teal: #004d40;
+            --accent-green: #00c853;
+            --background-start: #e0f2f1;
+            --background-end: #b2dfdb;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #e0f2f1;
+            --bin-green: #2ecc71;
+            --bin-blue: #3498db;
+            --bin-red: #e74c3c;
+            --correct-answer: #27ae60;
+            --incorrect-answer: #c0392b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--background-start), var(--background-end));
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-teal), var(--secondary-teal));
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        .logo i {
+            margin-right: 10px;
+        }
+
+        .nav-menu {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .nav-menu a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1.1rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            transition: background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-menu a i {
+            margin-right: 15px;
+            width: 20px;
+        }
+        .nav-menu a:hover, .nav-menu a.active {
+            background: var(--accent-green);
+            color: var(--secondary-teal);
+            font-weight: 600;
+        }
+        .sidebar-footer a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .sidebar-footer a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+            height: 100vh;
+            scrollbar-width: none; /* Firefox */
+        }
+        .main-content::-webkit-scrollbar { 
+            display: none; /* Safari and Chrome */
+        }
+
+
+        .main-header {
+            margin-bottom: 2rem;
+        }
+        .main-header h1 {
+            font-size: 2.5rem;
+            color: var(--secondary-teal);
+        }
+        
+        /* General Button Style */
+        .action-btn {
+            background: var(--accent-green);
+            color: var(--secondary-teal);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 77, 64, 0.1);
+        }
+        
+        /* Dashboard Section */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 1.5rem; 
+            margin-bottom: 2rem; 
+        }
+        .stat-card { 
+            text-align: center; 
+            transition: transform 0.3s; 
+        }
+        .stat-card:hover { 
+            transform: translateY(-5px); 
+        }
+        .stat-card i { 
+            font-size: 2rem; 
+            color: var(--accent-green); 
+        }
+        .stat-card h3 { 
+            font-size: 2.5rem; 
+            color: var(--secondary-teal); 
+        }
+        .stat-card p { 
+            color: var(--primary-teal); 
+        }
+        .charts-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; gap: 1.5rem; 
+       }
+        .chart-container { height: 350px; }
+        .chart-container h2 { text-align: center; color: var(--primary-teal); margin-bottom: 1rem; }
+        
+        /* Map Section */
+        #map-container { height: 70vh; border-radius: 20px; z-index: 1;}
+        
+        /* Profile Section */
+        .profile-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+        .profile-avatar { font-size: 4rem; width: 100px; height: 100px; border-radius: 50%; background: var(--accent-green); color: var(--secondary-teal); display: flex; justify-content: center; align-items: center; }
+        .profile-info h2 { color: var(--secondary-teal); font-size: 2rem; margin: 0; }
+        .profile-info p { color: var(--primary-teal); }
+        .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .profile-stats .stat-card { background: none; box-shadow: none; border: none; }
+        .badges-section h3 { color: var(--secondary-teal); margin-bottom: 1rem; }
+        .badges-grid { display: flex; gap: 1.5rem; }
+        .badge { background: var(--glass-bg); padding: 1rem; border-radius: 10px; text-align: center; color: var(--secondary-teal); }
+        .badge i { font-size: 2.5rem; color: var(--accent-green); }
+        .badge p { margin-top: 0.5rem; font-weight: 600; }
+
+        /* AI Scanner Section */
+        .scanner-container { text-align: center; }
+        .scanner-container p { color: var(--primary-teal); max-width: 600px; margin: 0 auto 2rem; }
+        .scanner-input-group { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        #waste-input { flex-grow: 1; max-width: 400px; padding: 1rem; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--secondary-teal); font-family: 'Poppins'; font-size: 1rem; }
+        #waste-input::placeholder { color: var(--primary-teal); }
+        .scan-btn { background: var(--accent-green); color: var(--secondary-teal); border: none; padding: 1rem 2rem; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+        .scan-btn:hover { transform: scale(1.05); }
+        .scan-result { display: none; margin-top: 2rem; animation: fadeInUp 0.5s; }
+        .result-bins { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;}
+        .bin-card { padding: 2rem; border-radius: 15px; width: 150px; opacity: 0.4; transform: scale(0.9); transition: all 0.4s ease; }
+        .bin-card.highlight { opacity: 1; transform: scale(1.1); border: 3px solid var(--text-primary); animation: bounce 0.5s ease; }
+        .bin-card i { font-size: 3rem; margin-bottom: 1rem; }
+        .bin-card h3 { font-size: 1.2rem; }
+        .bin-green { background-color: var(--bin-green); }
+        .bin-blue { background-color: var(--bin-blue); }
+        .bin-red { background-color: var(--bin-red); }
+        .result-text { color: var(--secondary-teal); margin-top: 1.5rem; font-size: 1.2rem; font-weight: 500;}
+
+        /* Education Hub Section */
+        .education-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .education-card { color: var(--secondary-teal); }
+        .education-card .icon { font-size: 2rem; margin-bottom: 1rem; }
+        .education-card h3 { color: var(--primary-teal); margin-bottom: 0.5rem; }
+        .education-card p { color: var(--primary-teal); }
+        .education-card ul { margin-top: 1rem; margin-left: 1.5rem; color: var(--primary-teal); }
+        .education-card .bin-green { color: var(--bin-green); }
+        .education-card .bin-blue { color: var(--bin-blue); }
+        .education-card .bin-red { color: var(--bin-red); }
+
+        /* Quiz Section */
+        #quiz-container { display: none; }
+        .quiz-question { color: var(--secondary-teal); font-size: 1.5rem; margin-bottom: 1.5rem; }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .quiz-option { background: var(--glass-bg); border: 2px solid var(--glass-border); padding: 1rem; border-radius: 10px; color: var(--secondary-teal); cursor: pointer; transition: all 0.3s; }
+        .quiz-option:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-3px); }
+        .quiz-option.correct { background: var(--correct-answer); color: white; border-color: var(--correct-answer); }
+        .quiz-option.incorrect { background: var(--incorrect-answer); color: white; border-color: var(--incorrect-answer); }
+        #quiz-feedback { margin-top: 1.5rem; text-align: center; color: var(--secondary-teal); font-size: 1.2rem; height: 30px; }
+        #quiz-score { text-align: center; color: var(--secondary-teal); font-size: 1.8rem; margin-top: 2rem; }
+
+        /* News & Updates Section */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .news-card { color: var(--secondary-teal); }
+        .news-card h3 { color: var(--primary-teal); }
+        .news-card .date { font-size: 0.9rem; color: var(--primary-teal); margin-bottom: 1rem; }
+
+        /* Contact Us Section*/
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; flex-wrap: wrap; }
+        .contact-info p { color: var(--secondary-teal); margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; }
+        .contact-info i { color: var(--accent-green); font-size: 1.5rem; }
+        .contact-form label { display: block; color: var(--primary-teal); margin-bottom: 0.5rem; }
+        .contact-form input, .contact-form textarea { width: 100%; padding: 1rem; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--secondary-teal); font-family: 'Poppins'; font-size: 1rem; margin-bottom: 1rem; }
+        .contact-form input::placeholder, .contact-form textarea::placeholder { color: var(--primary-teal); }
+
+        /* Leaderboard Section*/
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: var(--secondary-teal);
+        }
+        .leaderboard-table thead {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+        }
+        .leaderboard-table th {
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .leaderboard-table tbody tr {
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.3s;
+        }
+        .leaderboard-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.207);
+        }
+        .leaderboard-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        .leaderboard-table .rank {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary-teal);
+        }
+        .leaderboard-table .user-row {
+            background: rgba(12, 183, 23, 0.823);
+            border: 1px solid var(--accent-green);
+            border-radius: 10px;
+        }
+        .leaderboard-table .user-row:hover{
+            color: #00c853;
+        }
+        .leaderboard-table .user-row .rank, .leaderboard-table .user-row td {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .leaderboard-table .points {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        /* Recent Activity Feed*/
+        .activity-feed {
+            list-style: none;
+            padding: 0;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .activity-feed li {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            transition: background 0.3s;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .activity-feed li:last-child {
+            border-bottom: none;
+        }
+        .activity-feed li:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .activity-icon {
+            font-size: 1.5rem;
+            color: var(--accent-green);
+            min-width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 200, 83, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .activity-text p {
+            color: var(--secondary-teal);
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.3;
+        }
+        .activity-text span {
+            color: var(--primary-teal);
+            font-size: 0.8rem;
+        }
+
+        /* Hide sections by default */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            width: 90%; max-width: 500px;
+            padding: 2rem; transform: scale(0.9); transition: transform 0.3s;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-content h2 { color: var(--secondary-teal); margin-bottom: 1rem; }
+        .modal-content label { display: block; color: var(--primary-teal); margin-bottom: 0.5rem; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 1rem; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--secondary-teal); font-family: 'Poppins'; font-size: 1rem; margin-bottom: 1rem; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 1rem; }
+        .modal-buttons button { padding: 0.8rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-submit { background: var(--accent-green); color: var(--secondary-teal); }
+        .btn-cancel { background: #eee; color: #333; }
+
+        .camera-modal { width: 90%; max-width: 600px; padding: 1rem; transform: scale(0.9); transition: transform 0.3s; }
+        .modal-overlay.show .camera-modal { transform: scale(1); }
+        #video-feed { width: 100%; border-radius: 15px; }
+        .camera-controls { display: flex; justify-content: center; margin-top: 1rem; }
+        #capture-btn { font-size: 2.5rem; background: none; border: none; color: white; cursor: pointer; }
+
+        /* Loader Animation */
+        .loader { width: 50px; height: 50px; border: 5px solid var(--glass-border); border-top: 5px solid var(--accent-green); border-radius: 50%; animation: spin 1s linear infinite; display: none; margin: 2rem auto 0; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Ripple Effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 600ms linear;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Animation Classes */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 8px 32px 0 rgba(0, 77, 64, 0.1);} 50% { transform: scale(1.03); box-shadow: 0 12px 40px 0 rgba(0, 77, 64, 0.2);} 100% { transform: scale(1); box-shadow: 0 8px 32px 0 rgba(0, 77, 64, 0.1);} }
+        @keyframes bounce { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.15); } }
+        .hidden { opacity: 0; }
+        .show { animation: fadeInUp 0.6s ease-out forwards; }
+        .points-card-animation { animation: pulse 2.5s infinite ease-in-out; }
+
+        /* Staggered Animation for Lists */
+        .leaderboard-table tbody tr, .activity-feed li {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        /* --- NEW: Styles for New Features --- */
+
+        /* Notification System */
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast-notification {
+            background: var(--secondary-teal);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+            min-width: 300px;
+        }
+        .toast-notification.fade-out {
+            animation: slideOut 0.5s ease-in forwards;
+        }
+        .toast-notification i {
+            font-size: 1.5rem;
+            color: var(--accent-green);
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+        /* Marketplace Section */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .product-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            text-align: center;
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            color: var(--secondary-teal);
+            display: flex;
+            flex-direction: column;
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px 0 rgba(0, 77, 64, 0.15);
+        }
+        .product-card .product-image {
+            font-size: 3.5rem;
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+            height: 60px;
+        }
+        .product-card h3 {
+            color: var(--primary-teal);
+            margin-bottom: 0.5rem;
+        }
+        .product-card .points {
+            font-weight: 600;
+            color: var(--secondary-teal);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .product-card .points i {
+            color: #f1c40f; /* Gold color for star */
+        }
+        .product-card .redeem-btn {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            margin-top: auto; /* Pushes button to the bottom */
+        }
+        
+        /* Styles for AI Eco Suggestion input to match scanner */
+        #eco-input {
+            flex-grow: 1;
+            max-width: 400px;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            color: var(--secondary-teal);
+            font-family: 'Poppins';
+            font-size: 1rem;
+        }
+        #eco-input::placeholder { color: var(--primary-teal); }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .app-layout { grid-template-columns: 200px 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .contact-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; /* In a real app, this would become a toggleable menu */ }
+            .main-content { padding: 1rem; }
+            .quiz-options { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="notification-container"></div>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <a href="#dashboard" class="logo nav-link"><i class="fas fa-recycle"></i> BinMate</a>
+            
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-link active"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="#scanner" class="nav-link"><i class="fas fa-camera"></i> AI Scanner</a>
+                <a href="#map" class="nav-link"><i class="fas fa-map-marked-alt"></i> Issues Map</a>
+                <a href="#leaderboard" class="nav-link"><i class="fas fa-trophy"></i> Leaderboard</a>
+                <a href="#marketplace" class="nav-link"><i class="fas fa-store"></i> Marketplace</a>
+                <a href="#education" class="nav-link"><i class="fas fa-book-open"></i> Education Hub</a>
+                <a href="#news" class="nav-link"><i class="fas fa-newspaper"></i> News & Updates</a>
+                <a href="#profile" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+                <a href="#contact" class="nav-link"><i class="fas fa-envelope"></i> Contact Us</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                 <a href="#"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section id="dashboard" class="content-section active">
+                <div class="main-header hidden"><h1>Welcome Back, User!</h1></div>
+                <div class="stats-grid">
+                    <div class="stat-card glass-card hidden points-card-animation"><i class="fas fa-star"></i><h3 data-count="1250">0</h3><p>Total Points</p></div>
+                    <div class="stat-card glass-card hidden"><i class="fas fa-trophy"></i><h3 data-count="7">0</h3><p>City Rank</p></div>
+                    <div class="stat-card glass-card hidden"><i class="fas fa-leaf"></i><h3 data-count="42">0</h3><p>Waste Recycled (kg)</p></div>
+                    <div class="stat-card glass-card hidden"><i class="fas fa-check-circle"></i><h3 data-count="5">0</h3><p>Issues Resolved</p></div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-container glass-card hidden"><h2>Waste Segregation</h2><canvas id="impactChart"></canvas></div>
+                    <div class="chart-container glass-card hidden"><h2>Recent Activity</h2><ul class="activity-feed"><li><div class="activity-icon"><i class="fas fa-recycle"></i></div><div class="activity-text"><p>Recycled 5 plastic bottles</p><span>2 hours ago</span></div></li><li><div class="activity-icon"><i class="fas fa-trophy"></i></div><div class="activity-text"><p>Completed "Weekly Warrior" challenge</p><span>1 day ago</span></div></li><li><div class="activity-icon"><i class="fas fa-star"></i></div><div class="activity-text"><p>Earned 50 green points</p><span>2 days ago</span></div></li></ul></div>
+                </div>
+            </section>
+            
+            <section id="scanner" class="content-section">
+                <div class="main-header"><h1>AI Waste Scanner</h1></div>
+                <div class="glass-card scanner-container">
+                    <p>Enter an item's name or use your camera to get instant disposal guidance from our AI.</p>
+                    <div class="scanner-input-group">
+                        <input type="text" id="waste-input" placeholder="e.g., apple core">
+                        <button class="scan-btn action-btn" id="text-scan-btn">Analyze</button>
+                        <button class="scan-btn action-btn" id="camera-scan-btn"><i class="fas fa-camera"></i> Scan</button>
+                    </div>
+                    <div class="loader" id="loader"></div>
+                    <div class="scan-result" id="scan-result-container">
+                        <div class="result-bins">
+                            <div class="bin-card bin-green" id="bin-green"><i class="fas fa-leaf"></i><h3>Biodegradable</h3></div>
+                            <div class="bin-card bin-blue" id="bin-blue"><i class="fas fa-recycle"></i><h3>Recyclable</h3></div>
+                            <div class="bin-card bin-red" id="bin-red"><i class="fas fa-biohazard"></i><h3>Hazardous</h3></div>
+                        </div>
+                        <p class="result-text" id="result-text"></p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="map" class="content-section">
+                 <div class="main-header"><h1>Issues & Smart Bins Map</h1></div>
+                 <div id="map-container" class="glass-card"></div>
+                 <div class="map-controls" style="margin-top: 1rem; display: flex; gap: 1rem;">
+                    <button class="action-btn" id="report-issue-btn" style="flex-grow: 1;">Report a New Issue</button>
+                    <button class="action-btn" id="toggle-routes-btn" style="flex-grow: 1; background: var(--primary-teal);">Show Truck Routes</button>
+                </div>
+            </section>
+            
+            <section id="leaderboard" class="content-section">
+                <div class="main-header"><h1>Leaderboard</h1></div>
+                <div class="glass-card"><table class="leaderboard-table"><thead><tr><th>Rank</th><th>User</th><th>Points</th></tr></thead><tbody><tr><td class="rank">#1</td><td>K Keerthana</td><td class="points">5,430</td></tr><tr><td class="rank">#2</td><td>Deepika</td><td class="points">5,120</td></tr><tr><td class="rank">#3</td><td>Aravind</td><td class="points">4,980</td></tr><tr class="user-row"><td class="rank">#7</td><td>You</td><td class="points">1,250</td></tr></tbody></table></div>
+            </section>
+
+            <section id="marketplace" class="content-section">
+                <div class="main-header"><h1>Marketplace</h1></div>
+                <div class="glass-card">
+                    <p style="color: var(--primary-teal); text-align: center; margin-bottom: 2rem;">Redeem your hard-earned points for eco-friendly products!</p>
+                    <div class="market-grid">
+                        <div class="product-card">
+                            <div class="product-image"><i class="fas fa-shopping-bag"></i></div>
+                            <h3>Cloth Tote Bag</h3>
+                            <p class="points"><i class="fas fa-star"></i> 500 Points</p>
+                            <button class="action-btn redeem-btn">Redeem</button>
+                        </div>
+                        <div class="product-card">
+                            <div class="product-image"><i class="fas fa-seedling"></i></div>
+                            <h3>Seed Paper Pack</h3>
+                            <p class="points"><i class="fas fa-star"></i> 350 Points</p>
+                            <button class="action-btn redeem-btn">Redeem</button>
+                        </div>
+                        <div class="product-card">
+                            <div class="product-image"><i class="fas fa-mug-hot"></i></div>
+                            <h3>Bamboo Coffee Cup</h3>
+                            <p class="points"><i class="fas fa-star"></i> 750 Points</p>
+                            <button class="action-btn redeem-btn">Redeem</button>
+                        </div>
+                         <div class="product-card">
+                            <div class="product-image"><i class="fas fa-recycle"></i></div>
+                            <h3>Compost Bin</h3>
+                            <p class="points"><i class="fas fa-star"></i> 1500 Points</p>
+                            <button class="action-btn redeem-btn">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="education" class="content-section">
+                <div class="main-header"><h1>Education Hub</h1></div>
+                <div id="education-main">
+                    <div class="education-grid">
+                        <div class="glass-card education-card">
+                            <div class="icon bin-green"><i class="fas fa-leaf"></i></div>
+                            <h3>Biodegradable Waste (Green Bin)</h3>
+                            <p>This category is for organic waste that decomposes naturally. Proper disposal is vital for creating nutrient-rich compost.</p>
+                            <ul>
+                                <li><b>Examples:</b> Fruit/vegetable peels, leftover food, coffee grounds, tea bags, eggshells, garden trimmings.</li>
+                                <li><b>Action:</b> Use for home composting or place in your designated municipal green bin.</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card education-card">
+                            <div class="icon bin-blue"><i class="fas fa-recycle"></i></div>
+                            <h3>Recyclable Waste (Blue Bin)</h3>
+                            <p>These items can be processed and remanufactured into new products, saving energy and natural resources.</p>
+                            <ul>
+                               <li><b>Examples:</b> Plastic bottles (PET #1), milk jugs (HDPE #2), paper, cardboard, metal cans, glass containers.</li>
+                               <li><b>Action:</b> Always rinse containers to remove food residue. Check local guidelines for specific plastic types accepted.</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card education-card">
+                            <div class="icon bin-red"><i class="fas fa-biohazard"></i></div>
+                            <h3>Hazardous Waste (Red Bin)</h3>
+                            <p>This waste is potentially harmful to humans and the environment and must be handled with extreme care.</p>
+                            <ul>
+                               <li><b>Examples:</b> Batteries, electronics (e-waste), fluorescent light bulbs, expired medicines, paint cans, pesticides.</li>
+                               <li><b>Action:</b> Never throw in regular trash. Find designated local drop-off points for safe disposal.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card education-card" style="margin-top: 2rem;">
+                        <div class="icon bin-blue"><i class="fas fa-lightbulb"></i></div>
+                        <h3>AI Eco-Suggestions</h3>
+                        <p>Looking for a sustainable alternative? Ask our AI for a recommendation.</p>
+                        <div class="scanner-input-group" style="margin-top: 1rem; margin-bottom: 1rem; justify-content: flex-start;">
+                            <input type="text" id="eco-input" placeholder="e.g., plastic straw">
+                            <button class="scan-btn action-btn" id="eco-suggest-btn">Suggest</button>
+                        </div>
+                        <p id="eco-suggestion-result" style="font-weight: 600; color: var(--secondary-teal); min-height: 24px;"></p>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="action-btn" id="start-quiz-btn"><i class="fas fa-question-circle"></i> Test Your Knowledge</button>
+                    </div>
+                </div>
+                <div id="quiz-container" class="glass-card" style="margin-top: 2rem; display:none;">
+                    <h2 id="quiz-question" class="quiz-question"></h2>
+                    <div id="quiz-options" class="quiz-options"></div>
+                    <div id="quiz-feedback"></div>
+                    <div id="quiz-score" style="display:none;"></div>
+                </div>
+            </section>
+
+            <section id="news" class="content-section">
+                <div class="main-header"><h1>News & Updates</h1></div>
+                <div class="news-grid">
+                    <div class="glass-card news-card">
+                        <h3>Community Clean-Up Drive This Sunday!</h3>
+                        <p class="date">October 3, 2025</p>
+                        <p>Join us this Sunday at 8 AM near the Ramagundam Municipal Park for our monthly clean-up drive. Let's make our city shine together! Gloves and bags will be provided.</p>
+                    </div>
+                    <div class="glass-card news-card">
+                        <h3>BinMate Reaches 1,000 Users!</h3>
+                        <p class="date">September 28, 2025</p>
+                        <p>We are thrilled to announce that over 1,000 residents are now using BinMate to make a difference. Thank you for being a part of this green revolution!</p>
+                    </div>
+                    <div class="glass-card news-card">
+                        <h3>New Smart Bins Deployed in Sector 5</h3>
+                        <p class="date">September 15, 2025</p>
+                        <p>As part of the Smart City initiative, 20 new IoT-enabled smart bins have been installed across Sector 5 to improve collection efficiency. Check them out on the Issues Map!</p>
+                    </div>
+                </div>
+            </section>
+            
+             <section id="profile" class="content-section">
+                 <div class="main-header"><h1>Your Profile</h1></div>
+                 <div class="glass-card">
+                     <div class="profile-header"><div class="profile-avatar"><i class="fas fa-user"></i></div><div class="profile-info"><h2>User Name</h2><p>Environmental Enthusiast since March 2024</p></div></div>
+                     <div class="profile-stats"><div class="stat-card"><i class="fas fa-seedling"></i><h3>42kg</h3><p>CO₂ Saved</p></div><div class="stat-card"><i class="fas fa-recycle"></i><h3>156</h3><p>Items Recycled</p></div><div class="stat-card"><i class="fas fa-trophy"></i><h3>#7</h3><p>Community Rank</p></div></div>
+                     <div class="badges-section"><h3>Badges Earned</h3><div class="badges-grid"><div class="badge"><i class="fas fa-star"></i><p>Rising Star</p></div><div class="badge"><i class="fas fa-recycle"></i><p>Recycling Pro</p></div></div></div>
+                 </div>
+            </section>
+
+            <section id="contact" class="content-section">
+                <div class="main-header"><h1>Contact Us</h1></div>
+                <div class="glass-card">
+                    <div class="contact-grid">
+                        <div class="contact-info">
+                            <h3>Get in Touch</h3>
+                            <p>Have questions or suggestions? We'd love to hear from you!</p>
+                            <p><i class="fas fa-map-marker-alt"></i> BinMate HQ, Ramagundam, Telangana, India</p>
+                            <p><i class="fas fa-envelope"></i> contact@binmate.app</p>
+                            <p><i class="fas fa-phone"></i> +91 12345 67890</p>
+                        </div>
+                        <form class="contact-form" id="contact-form">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" placeholder="Your Name" required>
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="Your Email" required>
+                            <label for="message">Message</label>
+                            <textarea id="message" rows="5" placeholder="Your message..." required></textarea>
+                            <button type="submit" class="action-btn">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="camera-modal">
+        <div class="camera-modal glass-card">
+            <video id="video-feed" playsinline autoplay></video>
+            <div class="camera-controls">
+                <button id="capture-btn"><i class="fas fa-camera-retro"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="report-issue-modal">
+        <div class="modal-content glass-card">
+            <h2>Report a New Issue</h2>
+            <form id="report-issue-form">
+                <label for="issue-type">Type of Issue</label>
+                <input type="text" id="issue-type" placeholder="e.g., Overflowing Bin, Illegal Dumping" required>
+                <label for="issue-description">Description</label>
+                <textarea id="issue-description" rows="4" placeholder="Provide more details and location..."></textarea>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="submit" class="btn-submit action-btn">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <canvas id="capture-canvas" style="display:none;"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- COMPLETE, MERGED JAVASCRIPT ---
+            
+            // --- NEW: Notification System ---
+            const notificationContainer = document.getElementById('notification-container');
+            function showNotification(message, iconClass = 'fa-check-circle') {
+                const toast = document.createElement('div');
+                toast.classList.add('toast-notification');
+                toast.innerHTML = `<i class="fas ${iconClass}"></i> <p>${message}</p>`;
+                notificationContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    toast.addEventListener('animationend', () => toast.remove());
+                }, 5000);
+            }
+            showNotification('Welcome back, User!', 'fa-leaf');
+            setTimeout(() => {
+                showNotification('Reminder: Community Clean-Up this Sunday!', 'fa-calendar-alt');
+            }, 2500);
+
+            // --- NEW: AI Eco-Recommender Logic ---
+            const ecoInput = document.getElementById('eco-input');
+            const ecoSuggestBtn = document.getElementById('eco-suggest-btn');
+            const ecoResultEl = document.getElementById('eco-suggestion-result');
+
+            const ecoDatabase = {
+                'plastic bag': 'a reusable cloth or jute bag.',
+                'plastic straw': 'a metal or bamboo straw.',
+                'disposable coffee cup': 'a reusable travel mug.',
+                'plastic water bottle': 'a refillable metal or glass bottle.',
+                'cling film': 'beeswax wraps or reusable silicone lids.',
+                'paper towel': 'a washable cloth towel.'
+            };
+
+            ecoSuggestBtn.addEventListener('click', () => {
+                const query = ecoInput.value.toLowerCase().trim();
+                if (!query) {
+                    ecoResultEl.textContent = 'Please enter an item.';
+                    return;
+                }
+                let foundKey = Object.keys(ecoDatabase).find(key => query.includes(key));
+                if (foundKey) {
+                    ecoResultEl.textContent = `Instead of a ${foundKey}, try ${ecoDatabase[foundKey]}`;
+                } else {
+                    ecoResultEl.textContent = `Sorry, no suggestion found for "${query}".`;
+                }
+            });
+
+            // --- NEW: Marketplace Logic ---
+            document.querySelectorAll('.redeem-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.product-card');
+                    const itemName = card.querySelector('h3').textContent;
+                    const itemCost = card.querySelector('.points').textContent.trim();
+                    alert(`You have redeemed "${itemName}" for ${itemCost}!`);
+                });
+            });
+
+            // --- SPA Navigation Logic ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            
+            function navigateToSection(targetId) {
+                navLinks.forEach(item => item.classList.toggle('active', item.getAttribute('href') === `#${targetId}`));
+                contentSections.forEach(section => {
+                    const isActive = section.id === targetId;
+                    section.style.display = isActive ? 'block' : 'none';
+                    if (isActive) {
+                        const hiddenElements = section.querySelectorAll('.hidden');
+                        hiddenElements.forEach((el, index) => {
+                            el.style.animation = 'none';
+                            el.offsetHeight; /* trigger reflow */
+                            el.style.animation = `fadeInUp 0.6s ease-out ${index * 0.1}s forwards`;
+                        });
+                        const listItems = section.querySelectorAll('.leaderboard-table tbody tr, .activity-feed li');
+                        listItems.forEach((item, index) => {
+                            item.style.animation = `fadeInUp 0.5s ease-out ${0.2 + index * 0.1}s forwards`;
+                        });
+                    }
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    if (targetId) navigateToSection(targetId);
+                });
+            });
+
+            // --- AI Waste Scanner Logic (TEXT & CAMERA) ---
+            const textScanBtn = document.getElementById('text-scan-btn');
+            const wasteInput = document.getElementById('waste-input');
+            const resultContainer = document.getElementById('scan-result-container');
+            const resultText = document.getElementById('result-text');
+            const greenBin = document.getElementById('bin-green');
+            const blueBin = document.getElementById('bin-blue');
+            const redBin = document.getElementById('bin-red');
+            const loader = document.getElementById('loader');
+
+            const wasteDatabase = {
+                'apple core': 'biodegradable', 'vegetable peel': 'biodegradable', 'food scrap': 'biodegradable',
+                'plastic bottle': 'recyclable', 'paper': 'recyclable', 'cardboard': 'recyclable', 'can': 'recyclable', 'glass': 'recyclable',
+                'battery': 'hazardous', 'bulb': 'hazardous', 'paint': 'hazardous'
+            };
+
+            function updateResultUI(binType, itemName) {
+                const descriptions = {
+                    biodegradable: `'${itemName}' is biodegradable. Dispose of it in the GREEN bin for composting.`,
+                    recyclable: `'${itemName}' is recyclable. Please rinse/clean it and dispose of it in the BLUE bin.`,
+                    hazardous: `'${itemName}' is hazardous. Dispose of it carefully in the RED bin or at a designated collection point.`
+                };
+                greenBin.classList.toggle('highlight', binType === 'biodegradable');
+                blueBin.classList.toggle('highlight', binType === 'recyclable');
+                redBin.classList.toggle('highlight', binType === 'hazardous');
+                resultText.textContent = descriptions[binType] || `Could not classify '${itemName}'. Check local guidelines.`;
+                resultContainer.style.display = 'block';
+                loader.style.display = 'none';
+            }
+
+            textScanBtn.addEventListener('click', () => {
+                const query = wasteInput.value.toLowerCase().trim();
+                let foundKey = Object.keys(wasteDatabase).find(key => query.includes(key));
+                updateResultUI(foundKey ? wasteDatabase[foundKey] : 'unknown', query);
+            });
+            
+            const cameraScanBtn = document.getElementById('camera-scan-btn');
+            const cameraModal = document.getElementById('camera-modal');
+            const video = document.getElementById('video-feed');
+            const canvas = document.getElementById('capture-canvas');
+            const captureBtn = document.getElementById('capture-btn');
+            let stream;
+
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    video.srcObject = stream;
+                    cameraModal.classList.add('show');
+                } catch (err) { alert("Could not access camera. Please grant permission."); }
+            }
+            
+            function stopCamera() {
+                if (stream) stream.getTracks().forEach(track => track.stop());
+                cameraModal.classList.remove('show');
+            }
+
+            cameraScanBtn.addEventListener('click', startCamera);
+            captureBtn.addEventListener('click', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                const base64ImageData = canvas.toDataURL('image/jpeg').split(',')[1];
+                stopCamera();
+                analyzeImageWithAI(base64ImageData);
+            });
+            cameraModal.addEventListener('click', (e) => { if (e.target === cameraModal) stopCamera(); });
+
+            async function analyzeImageWithAI(base64ImageData) {
+                loader.style.display = 'block';
+                resultContainer.style.display = 'none';
+                const apiKey = ""; // IMPORTANT: Add your Gemini API Key here
+                if (!apiKey) {
+                    alert("API Key is missing. Camera scan analysis will not work.");
+                    updateResultUI('unknown', 'item due to missing API key');
+                    return;
+                }
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [ { text: "Analyze this image and identify the main waste item. Classify it into one of these three categories: Biodegradable, Recyclable, or Hazardous. Respond with only one of these three words, followed by a colon and the name of the item. For example: 'Recyclable: Plastic Bottle'." }, { inlineData: { mimeType: "image/jpeg", data: base64ImageData } } ] }] };
+
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                    const result = await response.json();
+                    const text = result.candidates[0].content.parts[0].text.toLowerCase();
+                    let [classification, itemName] = text.includes(':') ? text.split(':').map(s => s.trim()) : [text, 'the item'];
+                    updateResultUI(classification, itemName);
+                } catch (error) {
+                    console.error("AI Analysis Error:", error);
+                    updateResultUI('unknown', 'item due to AI error');
+                }
+            }
+            
+            // --- Chart.js Implementation ---
+            const ctx = document.getElementById('impactChart').getContext('2d');
+            let impactChart; 
+            
+            // --- MODIFIED: Leaflet.js Map Implementation ---
+            const mapLink = document.querySelector('a[href="#map"]');
+            let mapInitialized = false;
+            let map; 
+            let truckRouteLayer;
+            let routesVisible = false;
+            const toggleRoutesBtn = document.getElementById('toggle-routes-btn');
+            
+            mapLink.addEventListener('click', () => {
+                setTimeout(() => {
+                    if (!mapInitialized) {
+                        map = L.map('map-container').setView([18.7552, 79.4678], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+                        var smartBinIcon = L.icon({ iconUrl: 'https://img.icons8.com/plasticine/100/000000/trash.png', iconSize: [40, 40] });
+                        var issueIcon = L.icon({ iconUrl: 'https://img.icons8.com/fluency/96/000000/error.png', iconSize: [40, 40] });
+                        L.marker([18.7600, 79.4700], {icon: issueIcon}).addTo(map).bindPopup('<b>Illegal Dumping</b><br>Needs immediate attention.');
+                        L.marker([18.7552, 79.4678], {icon: smartBinIcon}).addTo(map).bindPopup('<b>Smart Bin #102</b><br>Status: 85% Full.');
+                        L.marker([18.7500, 79.4600], {icon: smartBinIcon}).addTo(map).bindPopup('<b>Smart Bin #105</b><br>Status: 40% Full.');
+                        
+                        const route1 = [ [18.770, 79.460], [18.765, 79.465], [18.7552, 79.4678], [18.750, 79.475], [18.760, 79.480] ];
+                        truckRouteLayer = L.polyline(route1, {color: '#004d40', weight: 5, opacity: 0.8, dashArray: '10, 10'});
+
+                        mapInitialized = true;
+                    }
+                }, 10);
+            });
+
+            toggleRoutesBtn.addEventListener('click', () => {
+                if (!map) return;
+                
+                if (routesVisible) {
+                    map.removeLayer(truckRouteLayer);
+                    toggleRoutesBtn.textContent = 'Show Truck Routes';
+                    toggleRoutesBtn.style.background = 'var(--primary-teal)';
+                } else {
+                    truckRouteLayer.addTo(map);
+                    toggleRoutesBtn.textContent = 'Hide Truck Routes';
+                    toggleRoutesBtn.style.background = 'var(--accent-green)';
+                }
+                routesVisible = !routesVisible;
+            });
+            
+            // --- Report Issue Modal Logic ---
+            const reportIssueModal = document.getElementById('report-issue-modal');
+            const reportIssueBtn = document.getElementById('report-issue-btn');
+            const closeReportModalBtn = reportIssueModal.querySelector('.btn-cancel');
+            const reportIssueForm = document.getElementById('report-issue-form');
+
+            reportIssueBtn.addEventListener('click', () => reportIssueModal.classList.add('show'));
+            closeReportModalBtn.addEventListener('click', () => reportIssueModal.classList.remove('show'));
+            reportIssueModal.addEventListener('click', (e) => {
+                if (e.target === reportIssueModal) reportIssueModal.classList.remove('show');
+            });
+            reportIssueForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Thank you! Your issue has been reported successfully.');
+                reportIssueForm.reset();
+                reportIssueModal.classList.remove('show');
+            });
+
+            // --- Education Hub Quiz Logic ---
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const quizContainer = document.getElementById('quiz-container');
+            const quizQuestionEl = document.getElementById('quiz-question');
+            const quizOptionsEl = document.getElementById('quiz-options');
+            const quizFeedbackEl = document.getElementById('quiz-feedback');
+            const quizScoreEl = document.getElementById('quiz-score');
+            const educationMainEl = document.getElementById('education-main');
+
+            const quizData = [
+                { question: "Which of these is a biodegradable item?", options: ["Plastic Bottle", "Apple Core", "Glass Jar", "Battery"], answer: "Apple Core" },
+                { question: "What should you do with a plastic bottle before recycling?", options: ["Crush it", "Rinse it", "Wrap it in paper", "Nothing"], answer: "Rinse it" },
+                { question: "Which bin does an old battery belong in?", options: ["Green Bin", "Blue Bin", "Red Bin", "Any Bin"], answer: "Red Bin" },
+                { question: "What does PET #1 plastic refer to?", options: ["Milk Jugs", "Yogurt Cups", "Water Bottles", "Shopping Bags"], answer: "Water Bottles" }
+            ];
+            let currentQuestionIndex = 0, score = 0;
+
+            startQuizBtn.addEventListener('click', () => {
+                currentQuestionIndex = 0; score = 0;
+                educationMainEl.style.display = 'none';
+                quizContainer.style.display = 'block';
+                quizScoreEl.style.display = 'none';
+                loadQuestion();
+            });
+
+            function loadQuestion() {
+                quizFeedbackEl.textContent = '';
+                if (currentQuestionIndex < quizData.length) {
+                    const q = quizData[currentQuestionIndex];
+                    quizQuestionEl.textContent = q.question;
+                    quizOptionsEl.innerHTML = '';
+                    q.options.forEach(option => {
+                        const optEl = document.createElement('div');
+                        optEl.textContent = option;
+                        optEl.classList.add('quiz-option');
+                        optEl.addEventListener('click', () => selectAnswer(option, q.answer, optEl));
+                        quizOptionsEl.appendChild(optEl);
+                    });
+                } else showFinalScore();
+            }
+
+            function selectAnswer(selected, correct, el) {
+                const options = quizOptionsEl.querySelectorAll('.quiz-option');
+                options.forEach(opt => opt.style.pointerEvents = 'none');
+                if (selected === correct) {
+                    score++;
+                    el.classList.add('correct');
+                    quizFeedbackEl.textContent = "Correct!";
+                    quizFeedbackEl.style.color = 'var(--correct-answer)';
+                } else {
+                    el.classList.add('incorrect');
+                    quizFeedbackEl.textContent = `Wrong! The correct answer is ${correct}.`;
+                    quizFeedbackEl.style.color = 'var(--incorrect-answer)';
+                }
+                setTimeout(() => { currentQuestionIndex++; loadQuestion(); }, 1500);
+            }
+
+            function showFinalScore() {
+                quizQuestionEl.textContent = "Quiz Complete!";
+                quizOptionsEl.innerHTML = '';
+                quizFeedbackEl.textContent = '';
+                quizScoreEl.textContent = `Your Final Score: ${score} out of ${quizData.length}`;
+                quizScoreEl.style.display = 'block';
+                startQuizBtn.textContent = 'Retake Quiz';
+                educationMainEl.style.display = 'block';
+            }
+
+            // --- Animation & Count-Up Logic ---
+            function animateCountUp(el) {
+                const target = +el.dataset.count;
+                if (isNaN(target)) return;
+                let count = 0;
+                const duration = 1500;
+                const stepTime = Math.max(1, Math.floor(duration / target));
+
+                const timer = setInterval(() => {
+                    count++;
+                    el.innerText = count.toLocaleString();
+                    if (count >= target) {
+                        el.innerText = target.toLocaleString();
+                        clearInterval(timer);
+                    }
+                }, stepTime);
+            }
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const h3 = entry.target.querySelector('h3[data-count]');
+                        if (h3 && !h3.classList.contains('counted')) {
+                            animateCountUp(h3);
+                            h3.classList.add('counted');
+                        }
+                        if (entry.target.id === 'impactChart' && !impactChart) {
+                             impactChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Plastics', 'Organic', 'Paper', 'Other'], datasets: [{ label: 'Waste Segregated (kg)', data: [18, 12, 9, 3], backgroundColor: ['rgba(0, 200, 83, 0.7)','rgba(0, 77, 64, 0.7)','rgba(0, 121, 107, 0.7)','rgba(178, 223, 219, 0.7)'], borderColor: 'var(--text-primary)', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: 'var(--secondary-teal)' } } }, animation: { animateScale: true, animateRotate: true } } });
+                        }
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            document.querySelectorAll('.stat-card').forEach(el => observer.observe(el));
+            observer.observe(document.getElementById('impactChart'));
+            
+            // --- Ripple Effect Logic ---
+            document.querySelectorAll(".action-btn, .nav-menu a").forEach(button => {
+                button.addEventListener("click", function(e) {
+                    const ripple = document.createElement("span");
+                    this.appendChild(ripple);
+                    const x = e.clientX - e.target.offsetLeft;
+                    const y = e.clientY - e.target.offsetTop;
+                    ripple.style.left = `${x}px`;
+                    ripple.style.top = `${y}px`;
+                    ripple.classList.add("ripple");
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+
+            // Initial page load animation
+            navigateToSection('dashboard');
+        });
+    </script>
+</body>
+</html>
